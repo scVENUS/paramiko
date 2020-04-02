@@ -2,6 +2,69 @@
 Changelog
 =========
 
+- :release:`2.7.1 <2019-12-09>`
+- :bug:`1567` The new-style private key format (added in 2.7) suffered from an
+  unpadding bug which had been fixed earlier for Ed25519 (as that key type has
+  always used the newer format). That fix has been refactored and applied to
+  the base key class, courtesy of Pierce Lopez.
+- :bug:`1565` (via :issue:`1566`) Fix a bug in support for ECDSA keys under the
+  newly supported OpenSSH key format. Thanks to Pierce Lopez for the patch.
+- :release:`2.7.0 <2019-12-03>`
+- :feature:`602` (via :issue:`1343`, :issue:`1313`, :issue:`618`) Implement
+  support for OpenSSH 6.5-style private key files (typically denoted as having
+  ``BEGIN OPENSSH PRIVATE KEY`` headers instead of PEM format's ``BEGIN RSA
+  PRIVATE KEY`` or similar). If you were getting any sort of weird auth error
+  from "modern" keys generated on newer operating system releases (such as
+  macOS Mojave), this is the first update to try.
+
+  Major thanks to everyone who contributed or tested versions of the patch,
+  including but not limited to: Kevin Abel, Michiel Tiller, Pierce Lopez, and
+  Jared Hobbs.
+- :bug:`- major` ``ssh_config`` :ref:`token expansion <TOKENS>` used a
+  different method of determining the local username (``$USER`` env var),
+  compared to what the (much older) client connection code does
+  (``getpass.getuser``, which includes ``$USER`` but may check other variables
+  first, and is generally much more comprehensive). Both modules now use
+  ``getpass.getuser``.
+- :feature:`-` A couple of outright `~paramiko.config.SSHConfig` parse errors
+  were previously represented as vanilla ``Exception`` instances; as part of
+  recent feature work a more specific exception class,
+  `~paramiko.ssh_exception.ConfigParseError`, has been created. It is now also
+  used in those older spots, which is naturally backwards compatible.
+- :feature:`717` Implement support for the ``Match`` keyword in ``ssh_config``
+  files. Previously, this keyword was simply ignored & keywords inside such
+  blocks were treated as if they were part of the previous block. Thanks to
+  Michael Leinartas for the initial patchset.
+
+  .. note::
+    This feature adds a new :doc:`optional install dependency </installing>`,
+    `Invoke <https://www.pyinvoke.org>`_, for managing ``Match exec``
+    subprocesses.
+
+- :support:`-` Additional :doc:`installation </installing>` ``extras_require``
+  "flavors" (``ed25519``, ``invoke``, and ``all``) have been added to
+  our packaging metadata; see the install docs for details.
+- :bug:`- major` Paramiko's use of ``subprocess`` for ``ProxyCommand`` support
+  is conditionally imported to prevent issues on limited interpreter platforms
+  like Google Compute Engine. However, any resulting ``ImportError`` was lost
+  instead of preserved for raising (in the rare cases where a user tried
+  leveraging ``ProxyCommand`` in such an environment). This has been fixed.
+- :bug:`- major` Perform deduplication of ``IdentityFile`` contents during
+  ``ssh_config`` parsing; previously, if your config would result in the same
+  value being encountered more than once, ``IdentityFile`` would contain that
+  many copies of the same string.
+- :feature:`897` Implement most 'canonical hostname' ``ssh_config``
+  functionality (``CanonicalizeHostname``, ``CanonicalDomains``,
+  ``CanonicalizeFallbackLocal``, and ``CanonicalizeMaxDots``;
+  ``CanonicalizePermittedCNAMEs`` has **not** yet been implemented). All were
+  previously silently ignored. Reported by Michael Leinartas.
+- :support:`-` Explicitly document :ref:`which ssh_config features we
+  currently support <ssh-config-support>`. Previously users just had to guess,
+  which is simply no good.
+- :feature:`-` Add new convenience classmethod constructors to
+  `~paramiko.config.SSHConfig`: `~paramiko.config.SSHConfig.from_text`,
+  `~paramiko.config.SSHConfig.from_file`, and
+  `~paramiko.config.SSHConfig.from_path`. No more annoying two-step process!
 - :release:`2.6.0 <2019-06-23>`
 - :feature:`1463` Add a new keyword argument to `SSHClient.connect
   <paramiko.client.SSHClient.connect>` and `~paramiko.transport.Transport`,
